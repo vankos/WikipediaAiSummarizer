@@ -165,7 +165,8 @@ fun fetchAndSummarize(wikiLink: String, apiKey: String, callback: (String?, Stri
                             Message(
                                 role = "system",
                                 content = "Summarize the following text in ${Locale.getDefault().language}, " +
-                                        "and include any cool or interesting facts if mentioned in the text: $content"
+                                        "and include any cool or interesting facts if mentioned in the text, separate them by title" +
+                                        "(if there is nothing cool or interesting, you can just write that there is nothing): $content"
                             )
                         )
                     )
