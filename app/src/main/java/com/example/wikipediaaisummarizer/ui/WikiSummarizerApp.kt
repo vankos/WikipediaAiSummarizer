@@ -160,11 +160,12 @@ fun fetchAndSummarize(wikiLink: String, apiKey: String, callback: (String?, Stri
                 if (content != null && content.isNotEmpty()) {
                     // Now summarize using OpenAI API
                     val openAIRequest = OpenAIRequest(
-                        model = "gpt-3.5-turbo",
+                        model = "gpt-4o",
                         messages = listOf(
                             Message(
                                 role = "system",
-                                content = "Summarize the following text in ${Locale.getDefault().language}: $content"
+                                content = "Summarize the following text in ${Locale.getDefault().language}, " +
+                                        "and include any cool or interesting facts if mentioned in the text: $content"
                             )
                         )
                     )
