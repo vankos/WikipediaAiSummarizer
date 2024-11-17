@@ -14,6 +14,8 @@ import retrofit2.Response
 import java.util.Locale
 import android.net.Uri
 import android.util.Log
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import com.yourpackage.wikisummarizer.network.WikipediaApiService
 import okhttp3.OkHttpClient
@@ -111,10 +113,12 @@ fun WikiSummarizerApp(incomingLink: String = "") {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-
+        val state = rememberScrollState()
         Text(
             text = resultText,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(state)
         )
     }
 }
