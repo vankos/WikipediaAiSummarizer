@@ -16,7 +16,10 @@ import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import com.yourpackage.wikisummarizer.network.WikipediaApiService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -116,10 +119,17 @@ fun WikiSummarizerApp(incomingLink: String = "") {
         val state = rememberScrollState()
         Text(
             text = resultText,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontSize = 16.sp,
+                lineHeight = 18.sp
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(state)
+                .padding(12.dp),
+            textAlign = TextAlign.Justify
         )
+
     }
 }
 
