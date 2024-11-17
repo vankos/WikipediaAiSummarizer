@@ -14,6 +14,7 @@ import retrofit2.Response
 import java.util.Locale
 import android.net.Uri
 import android.util.Log
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import com.yourpackage.wikisummarizer.network.WikipediaApiService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -27,7 +28,8 @@ object ApiKeyManager {
     private const val API_KEY_FIELD = "OpenAiApiKey"
 
     fun saveApiKey(context: android.content.Context, key: String) {
-        val sharedPreferences = context.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
+        val sharedPreferences =
+            context.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
         with(sharedPreferences.edit()) {
             putString(API_KEY_FIELD, key)
             apply()
@@ -35,11 +37,11 @@ object ApiKeyManager {
     }
 
     fun getApiKey(context: android.content.Context): String? {
-        val sharedPreferences = context.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
+        val sharedPreferences =
+            context.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
         return sharedPreferences.getString(API_KEY_FIELD, null)
     }
 }
-
 
 
 @Composable
@@ -82,7 +84,8 @@ fun WikiSummarizerApp(incomingLink: String = "") {
                 ApiKeyManager.saveApiKey(context, it)
             },
             label = { Text("Enter OpenAI API Key") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            visualTransformation = PasswordVisualTransformation(),
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -157,7 +160,7 @@ fun fetchAndSummarize(wikiLink: String, apiKey: String, callback: (String?, Stri
                 val page = pages?.values?.firstOrNull()
                 val content = page?.extract
 
-                if (content != null && content.isNotEmpty()) {
+                if (!content.isNullOrEmpty()) {
                     // Now summarize using OpenAI API
                     val openAIRequest = OpenAIRequest(
                         model = "gpt-4o",
@@ -173,12 +176,19 @@ fun fetchAndSummarize(wikiLink: String, apiKey: String, callback: (String?, Stri
 
                     val openAICall = openAIService.getSummary(openAIRequest)
                     openAICall.enqueue(object : Callback<OpenAIResponse> {
-                        override fun onResponse(call: Call<OpenAIResponse>, response: Response<OpenAIResponse>) {
+                        override fun onResponse(
+                            call: Call<OpenAIResponse>,
+                            response: Response<OpenAIResponse>
+                        ) {
                             if (response.isSuccessful) {
-                                val summary = response.body()?.choices?.firstOrNull()?.message?.content
+                                val summary =
+                                    response.body()?.choices?.firstOrNull()?.message?.content
                                 callback(summary, null)
                             } else {
-                                callback(null, "OpenAI API Error: ${response.errorBody()?.string()}")
+                                callback(
+                                    null,
+                                    "OpenAI API Error: ${response.errorBody()?.string()}"
+                                )
                             }
                         }
 
