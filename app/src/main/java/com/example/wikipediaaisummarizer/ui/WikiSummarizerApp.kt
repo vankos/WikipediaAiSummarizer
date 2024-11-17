@@ -72,7 +72,8 @@ fun WikiSummarizerApp(incomingLink: String = "") {
         }
     }
 
-    Column(modifier = Modifier.padding(16.dp)) {
+    Column(modifier =
+    Modifier.padding(16.dp, 40.dp, 16.dp, 16.dp)) {
         TextField(
             value = wikiLink,
             onValueChange = { wikiLink = it },
