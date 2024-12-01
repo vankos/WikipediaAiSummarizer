@@ -182,9 +182,9 @@ fun fetchAndSummarize(wikiLink: String, apiKey: String, callback: (String?, Stri
                         messages = listOf(
                             Message(
                                 role = "system",
-                                content = "Summarize the following text in ${Locale.getDefault().language}, " +
-                                        "and include any cool or interesting facts if mentioned in the text, separate them by title" +
-                                        "(if there is nothing cool or interesting, you can just write that there is nothing): $content"
+                                content = "Summarize the text below in ${Locale.getDefault().language}, " +
+                                        "keeping it casual and informal. Highlight any cool or interesting facts as bullet points (if there aren’t any, just say so). " +
+                                        "Avoid sounding like a boring Wikipedia page. Here's the text: $content"
                             )
                         )
                     )
