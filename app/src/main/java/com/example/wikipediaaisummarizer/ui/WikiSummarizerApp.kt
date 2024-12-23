@@ -15,6 +15,8 @@ import java.util.Locale
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -118,19 +120,21 @@ fun WikiSummarizerApp(incomingLink: String = "") {
 
         Spacer(modifier = Modifier.height(16.dp))
         val state = rememberScrollState()
-        Text(
-            text = resultText,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontSize = 16.sp,
-                lineHeight = 18.sp
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(state)
-                .padding(12.dp),
-            textAlign = TextAlign.Justify
-        )
-
+        SelectionContainer()
+        {
+            Text(
+                text = resultText,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 16.sp,
+                    lineHeight = 18.sp
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(state)
+                    .padding(12.dp),
+                textAlign = TextAlign.Justify
+            )
+        }
     }
 }
 
