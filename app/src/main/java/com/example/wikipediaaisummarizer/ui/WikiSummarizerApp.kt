@@ -178,13 +178,16 @@ fun fetchAndSummarize(wikiLink: String, apiKey: String, callback: (String?, Stri
                 if (!content.isNullOrEmpty()) {
                     // Now summarize using OpenAI API
                     val openAIRequest = OpenAIRequest(
-                        model = "gpt-4o",
+                        model = "chatgpt-4o-latest",
                         messages = listOf(
                             Message(
                                 role = "system",
-                                content = "Summarize the text below in ${Locale.getDefault().language}, " +
-                                        "keeping it casual and informal. Highlight any cool or interesting facts as bullet points (if there aren’t any, just say so). " +
-                                        "Avoid sounding like a boring Wikipedia page. Here's the text: $content"
+                                content = "Summarize the text below in ${Locale.getDefault().getDisplayLanguage(Locale("en"))}." +
+                                        "Write what the subject is known for." +
+                                        "Highlight any cool or interesting facts as bullet points (if there aren’t any, just say so)." +
+                                        "Avoid using formal Wikipedia-style language; keep it informal." +
+                                        "If you can add more about the subject outside the provided text, include it in a separate section." +
+                                        "Here's the text: $content"
                             )
                         )
                     )
