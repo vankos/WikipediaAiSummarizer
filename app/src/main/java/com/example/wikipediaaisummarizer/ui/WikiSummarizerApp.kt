@@ -186,12 +186,12 @@ fun fetchAndSummarize(wikiLink: String, apiKey: String, callback: (String?, Stri
                         messages = listOf(
                             Message(
                                 role = "system",
-                                content = "Summarize the text below in ${Locale.getDefault().getDisplayLanguage(Locale("en"))}." +
-                                        "Write what the subject is known for." +
-                                        "Highlight any cool or interesting facts as bullet points (if there aren’t any, just say so)." +
-                                        "Avoid using formal Wikipedia-style language; keep it informal." +
-                                        "If you can add more about the subject outside the provided text, include it in a separate section." +
-                                        "Here's the text: $content"
+                                content = "Write the response in ${Locale.getDefault().getDisplayLanguage(Locale("en"))}. " +
+                                        "Explain what the subject of the text below is known for. " +
+                                        "If there's a story connected to the subject, prioritize telling it over simply listing facts." +
+                                        "Keep the tone informal and conversational — avoid Wikipedia-style formality. " +
+                                        "Feel free to include additional information about the subject (or better story related to subject)  beyond the provided text if you know it. " +
+                                        "Here’s the text: $content"
                             )
                         )
                     )
