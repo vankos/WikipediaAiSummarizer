@@ -14,11 +14,13 @@ import retrofit2.Response
 import java.util.Locale
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
@@ -74,8 +76,10 @@ fun WikiSummarizerApp(incomingLink: String = "") {
         }
     }
 
-    Column(modifier =
-    Modifier.padding(16.dp, 40.dp, 16.dp, 16.dp)) {
+    Column(
+        modifier =
+        Modifier.padding(16.dp, 40.dp, 16.dp, 16.dp)
+    ) {
         TextField(
             value = wikiLink,
             onValueChange = { wikiLink = it },
@@ -97,6 +101,35 @@ fun WikiSummarizerApp(incomingLink: String = "") {
         )
 
         Spacer(modifier = Modifier.height(8.dp))
+
+        val clipboardManager = LocalClipboardManager.current
+        Button(
+            onClick = {
+                val wikiCall = getWikiRequest(wikiLink)
+                wikiCall.enqueue(object : Callback<WikiResponse> {
+                    override fun onResponse(call: Call<WikiResponse>, response: Response<WikiResponse>) {
+                        if (response.isSuccessful) {
+                            val content = getContentFromResponse(response)
+                            if (content.isNullOrEmpty()){
+                                Toast.makeText(context, "Wikipedia article content is empty", Toast.LENGTH_LONG).show()
+                                return
+                            }
+                            val prompt = GetPromt(content)
+                            clipboardManager.setText(AnnotatedString(prompt))
+                            Toast.makeText(context, "Copied", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+
+                    override fun onFailure(call: Call<WikiResponse>, t: Throwable) {
+                        Toast.makeText(context, "Error: ${t.localizedMessage} ", Toast.LENGTH_LONG).show()
+                    }
+
+                })
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Copy promt")
+        }
 
         Button(
             onClick = {
@@ -139,46 +172,11 @@ fun WikiSummarizerApp(incomingLink: String = "") {
 }
 
 fun fetchAndSummarize(wikiLink: String, apiKey: String, callback: (String?, String?) -> Unit) {
-    // Use Uri to parse the link
-    val uri = Uri.parse(wikiLink)
-    val titleEncoded = uri.lastPathSegment ?: ""
-    val title = URLDecoder.decode(titleEncoded, StandardCharsets.UTF_8.name()).replace("_", " ")
-
-    // Extract language code from the URL (default to "en" if not found)
-    val languageCode = uri.host?.split(".")?.getOrNull(0) ?: "en"
-    val baseUrl = "https://$languageCode.wikipedia.org/w/"
-
-    // Create Retrofit instance with logging
-    val logging = HttpLoggingInterceptor()
-    logging.setLevel(HttpLoggingInterceptor.Level.BODY)
-    val client = OkHttpClient.Builder()
-        .addInterceptor(logging)
-        .build()
-
-    val wikiApi = Retrofit.Builder()
-        .baseUrl(baseUrl)
-        .client(client)
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-        .create(WikipediaApiService::class.java)
-
-    val openAIService = createOpenAIService(apiKey)
-
-    // Fetch article content
-    val wikiCall = wikiApi.getArticleContent(
-        titles = title
-    )
-
+    val wikiCall = getWikiRequest(wikiLink)
     wikiCall.enqueue(object : Callback<WikiResponse> {
         override fun onResponse(call: Call<WikiResponse>, response: Response<WikiResponse>) {
             if (response.isSuccessful) {
-                val responseBody = response.body()
-                Log.d("WikiResponse", "Response body: $responseBody")
-
-                val pages = responseBody?.query?.pages
-                val page = pages?.values?.firstOrNull()
-                val content = page?.extract
-
+                val content = getContentFromResponse(response)
                 if (!content.isNullOrEmpty()) {
                     // Now summarize using OpenAI API
                     val openAIRequest = OpenAIRequest(
@@ -186,16 +184,12 @@ fun fetchAndSummarize(wikiLink: String, apiKey: String, callback: (String?, Stri
                         messages = listOf(
                             Message(
                                 role = "system",
-                                content = "Write the response in ${Locale.getDefault().getDisplayLanguage(Locale("en"))}. " +
-                                        "Explain what the subject of the text below is known for. " +
-                                        "If there's a story connected to the subject, prioritize telling it over simply listing facts." +
-                                        "Keep the tone informal and conversational — avoid Wikipedia-style formality. " +
-                                        "Feel free to include additional information about the subject (or better story related to subject)  beyond the provided text if you know it. " +
-                                        "Here’s the text: $content"
+                                content = GetPromt(content)
                             )
                         )
                     )
 
+                    val openAIService = createOpenAIService(apiKey)
                     val openAICall = openAIService.getSummary(openAIRequest)
                     openAICall.enqueue(object : Callback<OpenAIResponse> {
                         override fun onResponse(
@@ -230,6 +224,56 @@ fun fetchAndSummarize(wikiLink: String, apiKey: String, callback: (String?, Stri
             callback(null, "Wikipedia API Failure: ${t.localizedMessage}")
         }
     })
+}
+
+private fun GetPromt(content: String?) = "Write the response in ${
+    Locale.getDefault().getDisplayLanguage(Locale("en"))
+}. " +
+        "Explain what the subject of the text below is known for. " +
+        "If there's a story connected to the subject, prioritize telling it over simply listing facts." +
+        "Keep the tone informal and conversational — avoid Wikipedia-style formality. " +
+        "Feel free to include additional information about the subject (or better story related to subject)  beyond the provided text if you know it. " +
+        "Here’s the text: $content"
+
+private fun getContentFromResponse(response: Response<WikiResponse>): String? {
+    val responseBody = response.body()
+    Log.d("WikiResponse", "Response body: $responseBody")
+
+    val pages = responseBody?.query?.pages
+    val page = pages?.values?.firstOrNull()
+    val content = page?.extract
+    return content
+}
+
+private fun getWikiRequest(wikiLink: String): Call<WikiResponse> {
+    // Use Uri to parse the link
+    val uri = Uri.parse(wikiLink)
+    val titleEncoded = uri.lastPathSegment ?: ""
+    val title = URLDecoder.decode(titleEncoded, StandardCharsets.UTF_8.name()).replace("_", " ")
+
+    // Extract language code from the URL (default to "en" if not found)
+    val languageCode = uri.host?.split(".")?.getOrNull(0) ?: "en"
+    val baseUrl = "https://$languageCode.wikipedia.org/w/"
+
+    // Create Retrofit instance with logging
+    val logging = HttpLoggingInterceptor()
+    logging.setLevel(HttpLoggingInterceptor.Level.BODY)
+    val client = OkHttpClient.Builder()
+        .addInterceptor(logging)
+        .build()
+
+    val wikiApi = Retrofit.Builder()
+        .baseUrl(baseUrl)
+        .client(client)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+        .create(WikipediaApiService::class.java)
+
+    // Fetch article content
+    val wikiCall = wikiApi.getArticleContent(
+        titles = title
+    )
+    return wikiCall
 }
 
 @Preview(showBackground = true)
