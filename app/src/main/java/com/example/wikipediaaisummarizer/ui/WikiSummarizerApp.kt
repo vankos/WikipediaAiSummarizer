@@ -114,7 +114,7 @@ fun WikiSummarizerApp(incomingLink: String = "") {
                                 Toast.makeText(context, "Wikipedia article content is empty", Toast.LENGTH_LONG).show()
                                 return
                             }
-                            val prompt = GetPromt(content)
+                            val prompt = getPrompt(content)
                             clipboardManager.setText(AnnotatedString(prompt))
                             Toast.makeText(context, "Copied", Toast.LENGTH_SHORT).show()
                         }
@@ -128,7 +128,7 @@ fun WikiSummarizerApp(incomingLink: String = "") {
             },
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text("Copy promt")
+            Text("Copy prompt")
         }
 
         Button(
@@ -184,7 +184,7 @@ fun fetchAndSummarize(wikiLink: String, apiKey: String, callback: (String?, Stri
                         messages = listOf(
                             Message(
                                 role = "system",
-                                content = GetPromt(content)
+                                content = getPrompt(content)
                             )
                         )
                     )
@@ -226,7 +226,7 @@ fun fetchAndSummarize(wikiLink: String, apiKey: String, callback: (String?, Stri
     })
 }
 
-private fun GetPromt(content: String?) = "Write the response in ${
+private fun getPrompt(content: String?) = "Write the response in ${
     Locale.getDefault().getDisplayLanguage(Locale("en"))
 }. " +
         "Explain what the subject of the text below is known for. " +
