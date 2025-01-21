@@ -11,6 +11,9 @@ jobs:
 
     env:
       JAVA_HOME_17_X64: /usr/lib/jvm/java-17-openjdk-amd64
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
     steps:
     - name: Checkout code
@@ -22,6 +25,8 @@ jobs:
         distribution: 'zulu'
         java-version: '17'
 
+    - name: Decode keystore
+      run: echo ${{ secrets.KEYSTORE_BASE64 }} | base64 -d > app/my-release-key.jks
           
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
@@ -35,7 +40,7 @@ jobs:
     - name: Upload to GitHub Release
       uses: ncipollo/release-action@v1
       with:
-        artifacts: app/build/outputs/apk/release/app-release-unsigned.apk
+        artifacts: app/build/outputs/apk/release/app-release.apk
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: ${{ github.ref }}
         release_name: Release ${{ github.ref_name }}
