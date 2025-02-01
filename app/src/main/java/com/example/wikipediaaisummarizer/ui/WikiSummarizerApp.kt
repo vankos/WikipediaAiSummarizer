@@ -230,8 +230,9 @@ private fun getPrompt(content: String?) = "Write the response in ${
     Locale.getDefault().getDisplayLanguage(Locale("en"))
 }. " +
         "Explain what the subject of the text below is known for. " +
-        "If there's a story connected to the subject, prioritize telling it over simply listing facts." +
-        "Keep the tone informal and conversational — avoid Wikipedia-style formality. " +
+        "If there's a story connected to the subject, prioritize telling it over simply listing facts, " +
+        "but strictly based on verified details from the provided text or publicly available sources." +
+        "Keep the tone informal and conversational — avoid Wikipedia-style formality, but also avoid excessive pomp, sentimentality. " +
         "Feel free to include additional information about the subject (or better story related to subject)  beyond the provided text if you know it. " +
         "Here’s the text: $content"
 
