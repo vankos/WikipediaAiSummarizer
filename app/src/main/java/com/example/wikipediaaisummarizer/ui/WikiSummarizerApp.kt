@@ -229,11 +229,11 @@ fun fetchAndSummarize(wikiLink: String, apiKey: String, callback: (String?, Stri
 private fun getPrompt(content: String?) = "Write the response in ${
     Locale.getDefault().getDisplayLanguage(Locale("en"))
 }. " +
-        "Explain what the subject of the text below is known for. " +
-        "If there's a story connected to the subject, prioritize telling it over simply listing facts, " +
-        "but strictly based on verified details from the provided text or publicly available sources." +
-        "Keep the tone informal and conversational — avoid Wikipedia-style formality, but also avoid excessive pomp, sentimentality. " +
-        "Feel free to include additional information about the subject (or better story related to subject)  beyond the provided text if you know it. " +
+        "1. Describe the most interesting thing about the subject in the text below.\n" +
+        "2. Explain what the subject is known for.\n" +
+        "3. If there’s a notable story connected to the subject, tell it.\n" +
+        "4. Feel free to include any additional information about the subject (or related stories) beyond the provided text if you know it.\n" +
+        "5. Provide a good source about the subject (besides a Wikipedia article) if available—a book, film, or article is fine.\n" +
         "Here’s the text: $content"
 
 private fun getContentFromResponse(response: Response<WikiResponse>): String? {
