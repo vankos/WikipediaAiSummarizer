@@ -11,7 +11,6 @@ import androidx.compose.ui.platform.LocalContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.util.Locale
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -24,6 +23,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
+import com.example.wikipediaaisummarizer.ui.PromptService
 import com.yourpackage.wikisummarizer.network.WikipediaApiService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -60,6 +60,7 @@ fun WikiSummarizerApp(incomingLink: String = "") {
     var apiKey by remember { mutableStateOf(ApiKeyManager.getApiKey(context) ?: "") }
     var resultText by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
+    val promptService =  PromptService()
 
 
     LaunchedEffect(incomingLink) {
@@ -68,7 +69,7 @@ fun WikiSummarizerApp(incomingLink: String = "") {
             // Automatically trigger the summarization without button press
             if (apiKey.isNotEmpty()) {
                 isLoading = true
-                fetchAndSummarize(wikiLink, apiKey) { summary, error ->
+                fetchAndSummarize(wikiLink, apiKey, promptService) { summary, error ->
                     isLoading = false
                     resultText = summary ?: "Error: $error"
                 }
@@ -114,7 +115,8 @@ fun WikiSummarizerApp(incomingLink: String = "") {
                                 Toast.makeText(context, "Wikipedia article content is empty", Toast.LENGTH_LONG).show()
                                 return
                             }
-                            val prompt = getPrompt(content)
+
+                            val prompt = promptService.getPrompt(content)
                             clipboardManager.setText(AnnotatedString(prompt))
                             Toast.makeText(context, "Copied", Toast.LENGTH_SHORT).show()
                         }
@@ -133,10 +135,23 @@ fun WikiSummarizerApp(incomingLink: String = "") {
 
         Button(
             onClick = {
+                val uri = Uri.parse(wikiLink)
+                val title = GetTitleFromUrl(uri)
+                val prompt = promptService.getPromptWithTopicName(title)
+                clipboardManager.setText(AnnotatedString(prompt))
+                Toast.makeText(context, "Copied (title prompt)", Toast.LENGTH_SHORT).show()
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Copy prompt (title only)")
+        }
+
+        Button(
+            onClick = {
                 isLoading = true
                 resultText = ""
                 if (wikiLink.isNotEmpty() && apiKey.isNotEmpty()) {
-                    fetchAndSummarize(wikiLink, apiKey) { summary, error ->
+                    fetchAndSummarize(wikiLink, apiKey, promptService) { summary, error ->
                         isLoading = false
                         resultText = summary ?: "Error: $error"
                     }
@@ -171,7 +186,7 @@ fun WikiSummarizerApp(incomingLink: String = "") {
     }
 }
 
-fun fetchAndSummarize(wikiLink: String, apiKey: String, callback: (String?, String?) -> Unit) {
+fun fetchAndSummarize(wikiLink: String, apiKey: String, promtService: PromptService, callback: (String?, String?) -> Unit) {
     val wikiCall = getWikiRequest(wikiLink)
     wikiCall.enqueue(object : Callback<WikiResponse> {
         override fun onResponse(call: Call<WikiResponse>, response: Response<WikiResponse>) {
@@ -184,7 +199,7 @@ fun fetchAndSummarize(wikiLink: String, apiKey: String, callback: (String?, Stri
                         messages = listOf(
                             Message(
                                 role = "system",
-                                content = getPrompt(content)
+                                content = promtService.getPrompt(content)
                             )
                         )
                     )
@@ -226,16 +241,6 @@ fun fetchAndSummarize(wikiLink: String, apiKey: String, callback: (String?, Stri
     })
 }
 
-private fun getPrompt(content: String?) = "Write the response in ${
-    Locale.getDefault().getDisplayLanguage(Locale("en"))
-}. " +
-        "1. Describe the most interesting thing about the subject in the text below.\n" +
-        "2. Explain what the subject is known for.\n" +
-        "3. If there’s a notable story connected to the subject, tell it.\n" +
-        "4. Feel free to include any additional information about the subject (or related stories) beyond the provided text if you know it.\n" +
-        "5. Provide a good source about the subject (besides a Wikipedia article) if available—a book, film, or article is fine.\n" +
-        "Here’s the text: $content"
-
 private fun getContentFromResponse(response: Response<WikiResponse>): String? {
     val responseBody = response.body()
     Log.d("WikiResponse", "Response body: $responseBody")
@@ -249,9 +254,7 @@ private fun getContentFromResponse(response: Response<WikiResponse>): String? {
 private fun getWikiRequest(wikiLink: String): Call<WikiResponse> {
     // Use Uri to parse the link
     val uri = Uri.parse(wikiLink)
-    val titleEncoded = uri.lastPathSegment ?: ""
-    val title = URLDecoder.decode(titleEncoded, StandardCharsets.UTF_8.name()).replace("_", " ")
-
+    val title = GetTitleFromUrl(uri)
     // Extract language code from the URL (default to "en" if not found)
     val languageCode = uri.host?.split(".")?.getOrNull(0) ?: "en"
     val baseUrl = "https://$languageCode.wikipedia.org/w/"
@@ -275,6 +278,12 @@ private fun getWikiRequest(wikiLink: String): Call<WikiResponse> {
         titles = title
     )
     return wikiCall
+}
+
+private fun GetTitleFromUrl(uri: Uri): String {
+    val titleEncoded = uri.lastPathSegment ?: ""
+    val title = URLDecoder.decode(titleEncoded, StandardCharsets.UTF_8.name()).replace("_", " ")
+    return title
 }
 
 @Preview(showBackground = true)
