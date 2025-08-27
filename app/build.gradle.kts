@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation (libs.retrofit) // For network requests
     implementation (libs.converter.gson) // JSON conversion
+    implementation (libs.okhttp)
     implementation (libs.logging.interceptor) // Logging
     implementation (libs.androidx.lifecycle.runtime.ktx.v261) // Lifecycle components
     implementation (libs.androidx.activity.compose.v172)

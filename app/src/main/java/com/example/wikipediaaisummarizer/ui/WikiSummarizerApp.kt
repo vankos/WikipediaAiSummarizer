@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import com.example.wikipediaaisummarizer.ui.PromptService
 import com.yourpackage.wikisummarizer.network.WikipediaApiService
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -267,6 +268,12 @@ private fun getWikiRequest(wikiLink: String): Call<WikiResponse> {
     logging.setLevel(HttpLoggingInterceptor.Level.BODY)
     val client = OkHttpClient.Builder()
         .addInterceptor(logging)
+        .addInterceptor { chain ->
+            val request = chain.request().newBuilder()
+                .addHeader("User-Agent", "WikipediaAiSummarizer/1.0 (https://github.com/user/WikipediaAiSummarizer)")
+                .build()
+            chain.proceed(request)
+        }
         .build()
 
     val wikiApi = Retrofit.Builder()
