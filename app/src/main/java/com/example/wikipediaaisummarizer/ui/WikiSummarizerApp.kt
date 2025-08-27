@@ -119,13 +119,16 @@ fun WikiSummarizerApp(incomingLink: String = "") {
                             val prompt = promptService.getPrompt(content)
                             clipboardManager.setText(AnnotatedString(prompt))
                             Toast.makeText(context, "Copied", Toast.LENGTH_SHORT).show()
+                        } else {
+                            val errorBody = response.errorBody()?.string() ?: "Unknown error"
+                            Log.e("WikiSummarizer", "HTTP ${response.code()}: $errorBody")
+                            Toast.makeText(context, "Error ${response.code()}: $errorBody", Toast.LENGTH_LONG).show()
                         }
                     }
 
                     override fun onFailure(call: Call<WikiResponse>, t: Throwable) {
                         Toast.makeText(context, "Error: ${t.localizedMessage} ", Toast.LENGTH_LONG).show()
                     }
-
                 })
             },
             modifier = Modifier.fillMaxWidth(),
