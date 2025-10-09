@@ -270,7 +270,7 @@ private fun getWikiRequest(wikiLink: String): Call<WikiResponse> {
         .addInterceptor(logging)
         .addInterceptor { chain ->
             val request = chain.request().newBuilder()
-                .addHeader("User-Agent", "WikipediaAiSummarizer/1.0 (https://github.com/user/WikipediaAiSummarizer)")
+                .addHeader("User-Agent", "WikipediaAiSummarizer/1.0 (https://github.com/vankos/WikipediaAiSummarizer)")
                 .build()
             chain.proceed(request)
         }
