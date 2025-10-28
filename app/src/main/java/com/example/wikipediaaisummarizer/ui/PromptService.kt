@@ -11,8 +11,6 @@ class PromptService {
             "3. If there’s a notable story connected to the subject, tell it.\n" +
             "4. What’s the most meme-worthy or funniest aspect of the subject, if any?\n" +
             "5. Feel free to include any additional information about the subject (or related stories) beyond the provided text if you know it.\n" +
-            "6. Show relevant to topic image if possible .\n" +
-            "7. Provide a good source about the subject (besides a Wikipedia article) if available—a book, film, or article is fine.\n" +
             "Here’s the text: $content"
 
     fun getPromptWithTopicName(topic: String?) = "Write the response in " +
@@ -22,8 +20,5 @@ class PromptService {
             "2. Describe the most interesting thing about the subject.\n" +
             "3. If there’s a notable story connected to the subject, tell it.\n" +
             "4. What’s the most meme-worthy or funniest aspect of the subject, if any?\n" +
-            "5. Feel free to include any additional information about the subject (or related stories) if you know it.\n" +
-            "6. Show relevant to topic image if possible .\n" +
-            "7. Provide a good source about the subject (besides a Wikipedia article) if available—a book, film, or article is fine."
-
+            "5. Feel free to include any additional information about the subject (or related stories) if you know it.\n"
 }
