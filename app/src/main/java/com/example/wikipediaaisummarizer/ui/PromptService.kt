@@ -18,8 +18,8 @@ class PromptService {
             "Don’t write a dry summary; keep it narrative.\n" +
             "Write the response in ${Locale.getDefault().getDisplayLanguage(Locale("en"))}. " +
             "The answer structure should be as follows:\n" +
-            "1. Start with a single vivid, surprising concrete detail/scene that hooks the reader (not a list), then briefly state what the subject is known for.\n" +
-            "2. Describe the most interesting thing about the subject (again, anchored in concrete details).\n" +
+            "1. State what the subject is known for.\n" +
+            "2. Describe the most interesting thing about the subject.\n" +
             "3. If there’s a notable story connected to the subject, tell it.\n" +
             "4. What’s the most meme-worthy or funniest aspect of the subject, if any?\n" +
             "5. Feel free to include any additional information about the subject (or related stories) if you know it.\n"
