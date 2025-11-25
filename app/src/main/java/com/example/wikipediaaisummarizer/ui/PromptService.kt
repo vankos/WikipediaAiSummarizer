@@ -10,7 +10,8 @@ class PromptService {
             "I want to understand the essence and interesting details, not just memorize facts. \n" +
             "If you must choose between an abstract takeaway and a weird specific detail, choose the detail.\n" +
             "Focus on the \"why\" and \"how\" (the consequences and underlying reasons), but explain them through specific examples rather than general slogans.\n" +
-            "Avoid vague “big idea” phrases and metaphors.\n" +
+            "Base everything you say on verifiable facts. " +
+            "Clearly separate facts from interpretation:do not include  your interpretation. If something is your guess or speculation omit it. Do not present guesses as facts.\n" +
             "DO NOT use complex jargon or technical terms without explaining them simply.\n" +
             "Don’t list dry dates, minor names, or trivia unless they are essential to the story or genuinely surprising.\n" +
             "Don’t write a dry summary; keep it narrative.\n" +
@@ -19,7 +20,8 @@ class PromptService {
             "1. State what the subject is known for.\n" +
             "2. Describe the most interesting thing about the subject or surprising, local, quirky details or unintended consequences\n" +
             "3. If there’s a notable story connected to the subject, tell it.\n" +
-            "4. What’s the most meme-worthy or funniest aspect of the subject, if any?\n" +
+            "4. What’s the most meme-worthy or funniest aspect of the subject, if any?" +
+            "Describe only real memes or jokes that actually exist. Do NOT create new memes yourself.\n" +
             "5. Feel free to include any additional information about the subject (or related stories) if you know it.\n"
 
     fun getPrompt(content: String?): String =
