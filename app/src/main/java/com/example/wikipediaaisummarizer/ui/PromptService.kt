@@ -19,7 +19,7 @@ class PromptService {
             "The answer structure should be as follows:\n" +
             "1. State what the subject is known for.\n" +
             "2. Describe the most interesting thing about the subject or surprising, local, quirky details or unintended consequences\n" +
-            "3. If there’s a notable story connected to the subject, tell it.\n" +
+            "3. If there’s a notable story, legend, rumor, or specific incident connected to the subject, tell that single story as a self-contained story. Do NOT turn this section into a chronological history or a timeline of the object.\n" +
             "4. What’s the most meme-worthy or funniest aspect of the subject, if any?" +
             "Describe only real memes or jokes that actually exist. Do NOT create new memes yourself.\n" +
             "5. Feel free to include any additional information about the subject (or related stories) if you know it.\n"
