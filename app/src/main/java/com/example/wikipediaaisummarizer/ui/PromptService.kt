@@ -19,7 +19,7 @@ class PromptService {
         - Do NOT invent your own guesses or motives. You may include documented interpretations by historians, journalists, economists, and official reports, as long as you present them as interpretations, not absolute truth.
         Write the response in ${Locale.getDefault().getDisplayLanguage(Locale("en"))}. The answer structure should be as follows:
         1. Start with what this place/subject is *famous or mis-known for*, as a short narrative hook, not a list of dates.
-        2. Describe the most interesting or surprising local mechanisms, quirks or unintended consequences as stories.
+        2. Describe the most interesting or surprising local mechanism, quirk, fact or unintended consequence.
         3. Tell one self-contained real story, legend, rumor or specific incident that connected to the subject.
         4. What’s the most meme-worthy or funniest aspect of the subject, if any? Describe only real memes or jokes that actually exist. Do NOT create new memes yourself.
         5. Add any extra stories or connections that help understand the bigger picture, but always in narrative form, not as a bullet-point timeline.
