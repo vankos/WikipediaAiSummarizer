@@ -23,7 +23,8 @@ class PromptService {
         2. Describe the most interesting or surprising local mechanisms, quirks, facts or unintended consequences.
         3. Tell one self-contained real story, legend, rumor or specific incident that connected to the subject.
         4. What’s the most meme-worthy or funniest aspect of the subject, if any? Describe only real memes or jokes that actually exist. Do NOT create new memes yourself.
-        5. Add any extra facts, stories or connections that help understand the bigger picture, but always in narrative form, not as a bullet-point timeline.
+        5. Tell me about any critics, opposition, or controversies related to the subject (if any). If there are none, just write "None".
+        6. Add any extra facts, stories or connections that help understand the bigger picture, but always in narrative form, not as a bullet-point timeline.
         """
 
     fun getPrompt(content: String?): String =
