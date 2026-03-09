@@ -1,80 +1,43 @@
 // WikiSummarizerApp.kt
-import androidx.compose.runtime.*
-import androidx.compose.ui.tooling.preview.Preview
+import android.content.Intent
+import android.net.Uri
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.example.wikipediaaisummarizer.ui.PromptService
+import com.yourpackage.wikisummarizer.network.WikipediaApiService
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import android.net.Uri
-import android.util.Log
-import android.widget.Toast
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.sp
-import com.example.wikipediaaisummarizer.ui.PromptService
-import com.yourpackage.wikisummarizer.network.WikipediaApiService
-import okhttp3.Interceptor
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.net.URLDecoder
+import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
-object ApiKeyManager {
-    private const val PREFS_NAME = "WikiSummarizerPrefs"
-    private const val API_KEY_FIELD = "OpenAiApiKey"
-
-    fun saveApiKey(context: android.content.Context, key: String) {
-        val sharedPreferences =
-            context.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
-        with(sharedPreferences.edit()) {
-            putString(API_KEY_FIELD, key)
-            apply()
-        }
-    }
-
-    fun getApiKey(context: android.content.Context): String? {
-        val sharedPreferences =
-            context.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
-        return sharedPreferences.getString(API_KEY_FIELD, null)
-    }
-}
 
 
 @Composable
 fun WikiSummarizerApp(incomingLink: String = "") {
     val context = LocalContext.current
     var wikiLink by remember { mutableStateOf("") }
-    var apiKey by remember { mutableStateOf(ApiKeyManager.getApiKey(context) ?: "") }
-    var resultText by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
-    val promptService =  PromptService()
-
+    val promptService = PromptService()
 
     LaunchedEffect(incomingLink) {
         if (incomingLink.isNotEmpty()) {
             wikiLink = incomingLink
-            // Automatically trigger the summarization without button press
-            if (apiKey.isNotEmpty()) {
-                isLoading = true
-                fetchAndSummarize(wikiLink, apiKey, promptService) { summary, error ->
-                    isLoading = false
-                    resultText = summary ?: "Error: $error"
-                }
-            }
         }
     }
 
@@ -87,19 +50,6 @@ fun WikiSummarizerApp(incomingLink: String = "") {
             onValueChange = { wikiLink = it },
             label = { Text("Enter Wikipedia Link") },
             modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        TextField(
-            value = apiKey,
-            onValueChange = {
-                apiKey = it
-                ApiKeyManager.saveApiKey(context, it)
-            },
-            label = { Text("Enter OpenAI API Key") },
-            modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation(),
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -150,99 +100,45 @@ fun WikiSummarizerApp(incomingLink: String = "") {
             Text("Copy prompt (title only)")
         }
 
+        Spacer(modifier = Modifier.height(8.dp))
+
         Button(
             onClick = {
-                isLoading = true
-                resultText = ""
-                if (wikiLink.isNotEmpty() && apiKey.isNotEmpty()) {
-                    fetchAndSummarize(wikiLink, apiKey, promptService) { summary, error ->
-                        isLoading = false
-                        resultText = summary ?: "Error: $error"
-                    }
-                } else {
-                    isLoading = false
-                    resultText = "Please enter both Wikipedia link and API key."
-                }
+                val uri = Uri.parse(wikiLink)
+                val title = GetTitleFromUrl(uri)
+                val prompt = promptService.getPromptWithTopicName(title)
+                clipboardManager.setText(AnnotatedString(prompt))
+                Toast.makeText(context, "Prompt copied — paste it in Gemini", Toast.LENGTH_SHORT).show()
+                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://gemini.google.com/app")))
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading
         ) {
-            Text(if (isLoading) "Loading..." else "Generate Summary")
+            Text("Open in Gemini")
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-        val state = rememberScrollState()
-        SelectionContainer()
-        {
-            Text(
-                text = resultText,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 16.sp,
-                    lineHeight = 18.sp
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(state)
-                    .padding(12.dp),
-                textAlign = TextAlign.Justify
-            )
+        Button(
+            onClick = { openPromptInAI(context, "https://claude.ai/new?q=", wikiLink, promptService) },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Open in Claude")
+        }
+
+        Button(
+            onClick = { openPromptInAI(context, "https://chatgpt.com/?q=", wikiLink, promptService) },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Open in ChatGPT")
         }
     }
 }
 
-fun fetchAndSummarize(wikiLink: String, apiKey: String, promtService: PromptService, callback: (String?, String?) -> Unit) {
-    val wikiCall = getWikiRequest(wikiLink)
-    wikiCall.enqueue(object : Callback<WikiResponse> {
-        override fun onResponse(call: Call<WikiResponse>, response: Response<WikiResponse>) {
-            if (response.isSuccessful) {
-                val content = getContentFromResponse(response)
-                if (!content.isNullOrEmpty()) {
-                    // Now summarize using OpenAI API
-                    val openAIRequest = OpenAIRequest(
-                        model = "chatgpt-4o-latest",
-                        messages = listOf(
-                            Message(
-                                role = "system",
-                                content = promtService.getPrompt(content)
-                            )
-                        )
-                    )
-
-                    val openAIService = createOpenAIService(apiKey)
-                    val openAICall = openAIService.getSummary(openAIRequest)
-                    openAICall.enqueue(object : Callback<OpenAIResponse> {
-                        override fun onResponse(
-                            call: Call<OpenAIResponse>,
-                            response: Response<OpenAIResponse>
-                        ) {
-                            if (response.isSuccessful) {
-                                val summary =
-                                    response.body()?.choices?.firstOrNull()?.message?.content
-                                callback(summary, null)
-                            } else {
-                                callback(
-                                    null,
-                                    "OpenAI API Error: ${response.errorBody()?.string()}"
-                                )
-                            }
-                        }
-
-                        override fun onFailure(call: Call<OpenAIResponse>, t: Throwable) {
-                            callback(null, "OpenAI API Failure: ${t.localizedMessage}")
-                        }
-                    })
-                } else {
-                    callback(null, "Article content not found or is empty.")
-                }
-            } else {
-                callback(null, "Wikipedia API Error: ${response.errorBody()?.string()}")
-            }
-        }
-
-        override fun onFailure(call: Call<WikiResponse>, t: Throwable) {
-            callback(null, "Wikipedia API Failure: ${t.localizedMessage}")
-        }
-    })
+private fun openPromptInAI(context: android.content.Context, baseUrl: String, wikiLink: String, promptService: PromptService) {
+    val uri = Uri.parse(wikiLink)
+    val title = GetTitleFromUrl(uri)
+    val prompt = promptService.getPromptWithTopicName(title)
+    val encodedPrompt = URLEncoder.encode(prompt, StandardCharsets.UTF_8.name())
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("$baseUrl$encodedPrompt"))
+    context.startActivity(intent)
 }
 
 private fun getContentFromResponse(response: Response<WikiResponse>): String? {
