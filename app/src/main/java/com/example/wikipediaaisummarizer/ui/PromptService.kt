@@ -14,7 +14,7 @@ class PromptService {
         - Avoid complex jargon; if you must use a technical term, explain it in simple words.
         - Do NOT invent your own guesses or motives. You may include documented interpretations by historians, journalists, economists, and official reports, as long as you present them as interpretations, not absolute truth.
         Write the response in ${Locale.getDefault().getDisplayLanguage(Locale("en"))}. The answer structure should be as follows:
-        1. Start with what this place/subject is famous, infamous or mis-known for
+        1. Start with what this place/subject is famous or infamous for
         2. Describe the most interesting or surprising thing about subject
         3. Tell one story, legend, rumor or specific incident that connected to the subject.
         4. What’s the most meme-worthy or funniest aspect of the subject, if any? Describe only real memes or jokes that actually exist. Do NOT create new memes yourself.
