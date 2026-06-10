@@ -1,15 +1,18 @@
 // WikiSummarizerApp.kt
 import android.content.Intent
 import android.net.Uri
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,7 +29,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
-
+import java.util.Locale
+import androidx.compose.ui.Alignment
 
 
 @Composable
@@ -34,6 +38,11 @@ fun WikiSummarizerApp(incomingLink: String = "") {
     val context = LocalContext.current
     var wikiLink by remember { mutableStateOf("") }
     val promptService = PromptService()
+
+    // Read per-app language (set via system Settings → Apps → App → Language)
+    // Falls back to system locale if no per-app language is set
+    val appLocale = LocalConfiguration.current.locales[0] ?: Locale.getDefault()
+    val languageDisplayName = appLocale.getDisplayLanguage(Locale("en"))
 
     LaunchedEffect(incomingLink) {
         if (incomingLink.isNotEmpty()) {
@@ -45,6 +54,21 @@ fun WikiSummarizerApp(incomingLink: String = "") {
         modifier =
         Modifier.padding(16.dp, 40.dp, 16.dp, 16.dp)
     ) {
+        // Settings shortcut button
+        TextButton(
+            onClick = {
+                val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS).apply {
+                    data = Uri.parse("package:${context.packageName}")
+                }
+                context.startActivity(intent)
+            },
+            modifier = Modifier.align(Alignment.End)
+        ) {
+            Text("⚙ Language")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         TextField(
             value = wikiLink,
             onValueChange = { wikiLink = it },
@@ -67,7 +91,7 @@ fun WikiSummarizerApp(incomingLink: String = "") {
                                 return
                             }
 
-                            val prompt = promptService.getPrompt(content)
+                            val prompt = promptService.getPrompt(content, languageDisplayName)
                             clipboardManager.setText(AnnotatedString(prompt))
                             Toast.makeText(context, "Copied", Toast.LENGTH_SHORT).show()
                         } else {
@@ -91,7 +115,7 @@ fun WikiSummarizerApp(incomingLink: String = "") {
             onClick = {
                 val uri = Uri.parse(wikiLink)
                 val title = GetTitleFromUrl(uri)
-                val prompt = promptService.getPromptWithTopicName(title)
+                val prompt = promptService.getPromptWithTopicName(title, languageDisplayName)
                 clipboardManager.setText(AnnotatedString(prompt))
                 Toast.makeText(context, "Copied (title prompt)", Toast.LENGTH_SHORT).show()
             },
@@ -106,7 +130,7 @@ fun WikiSummarizerApp(incomingLink: String = "") {
             onClick = {
                 val uri = Uri.parse(wikiLink)
                 val title = GetTitleFromUrl(uri)
-                val prompt = promptService.getPromptWithTopicName(title)
+                val prompt = promptService.getPromptWithTopicName(title, languageDisplayName)
                 clipboardManager.setText(AnnotatedString(prompt))
                 Toast.makeText(context, "Prompt copied — paste it in Gemini", Toast.LENGTH_SHORT).show()
                 context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://gemini.google.com/app")))
@@ -117,14 +141,14 @@ fun WikiSummarizerApp(incomingLink: String = "") {
         }
 
         Button(
-            onClick = { openPromptInAI(context, "https://claude.ai/new?q=", wikiLink, promptService) },
+            onClick = { openPromptInAI(context, "https://claude.ai/new?q=", wikiLink, promptService, languageDisplayName) },
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text("Open in Claude")
         }
 
         Button(
-            onClick = { openPromptInAI(context, "https://chatgpt.com/?q=", wikiLink, promptService) },
+            onClick = { openPromptInAI(context, "https://chatgpt.com/?q=", wikiLink, promptService, languageDisplayName) },
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text("Open in ChatGPT")
@@ -132,10 +156,16 @@ fun WikiSummarizerApp(incomingLink: String = "") {
     }
 }
 
-private fun openPromptInAI(context: android.content.Context, baseUrl: String, wikiLink: String, promptService: PromptService) {
+private fun openPromptInAI(
+    context: android.content.Context,
+    baseUrl: String,
+    wikiLink: String,
+    promptService: PromptService,
+    languageDisplayName: String
+) {
     val uri = Uri.parse(wikiLink)
     val title = GetTitleFromUrl(uri)
-    val prompt = promptService.getPromptWithTopicName(title)
+    val prompt = promptService.getPromptWithTopicName(title, languageDisplayName)
     val encodedPrompt = URLEncoder.encode(prompt, StandardCharsets.UTF_8.name())
     val intent = Intent(Intent.ACTION_VIEW, Uri.parse("$baseUrl$encodedPrompt"))
     context.startActivity(intent)
