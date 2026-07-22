@@ -13,7 +13,7 @@ class PromptService {
         - Do NOT write dates only when absolutely essential to understand the story. You can specify decade or century for understanding approximate period.  
         - Avoid complex jargon; if you must use a technical term, replace it by more simple one or explain it in simple words.
         - Do NOT invent your own guesses or motives.
-        - Do NOT write stats or much numbers 
+        - Do NOT include statistics, or any numeric data 
         Write the response in ${languageDisplayName}. The answer structure should be as follows:
         1. Start with what this place/subject is famous or infamous for
         2. Describe the most interesting or surprising thing about subject
