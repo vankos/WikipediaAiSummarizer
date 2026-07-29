@@ -130,7 +130,7 @@ fun WikiSummarizerApp(incomingLink: String = "") {
             onClick = {
                 val uri = Uri.parse(wikiLink)
                 val title = GetTitleFromUrl(uri)
-                val prompt = promptService.getPromptWithTopicName(title, languageDisplayName)
+                val prompt = promptService.getPromptWithTopicName(title, languageDisplayName) + "\n\nSEARCH THE WEB"
                 clipboardManager.setText(AnnotatedString(prompt))
                 Toast.makeText(context, "Prompt copied — paste it in Gemini", Toast.LENGTH_SHORT).show()
                 context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://gemini.google.com/app")))
