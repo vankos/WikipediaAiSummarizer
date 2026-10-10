@@ -46,8 +46,8 @@ jobs:
       with:
         artifacts: app/build/outputs/apk/release/app-release.apk
         token: ${{ secrets.GITHUB_TOKEN }}
-        tag: ${{ github.ref }}
-        release_name: Release ${{ github.ref_name }}
+        tag: ${{ github.ref_name }}
+        name: Wikipedia AI Summarizer ${{ github.ref_name }}
         body: "Automatically generated release from GitHub Actions"
         draft: false
         prerelease: false
