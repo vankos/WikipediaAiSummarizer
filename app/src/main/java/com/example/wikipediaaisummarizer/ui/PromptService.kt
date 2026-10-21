@@ -7,7 +7,8 @@ class PromptService {
     private fun promptTemplate(languageDisplayName: String): String =
         """
         Style:
-        - Tell me about topic the way a good documentary host would: lively, concrete, in simple words.
+        - Tell me about topic in lively, bold, concrete way, in simple words.
+        - Be sceptical
         - Add an explanation of why something happened and how it worked
         Constraints:
         - Do not write a chronological timeline like "In 1764…, in 1917…". 
