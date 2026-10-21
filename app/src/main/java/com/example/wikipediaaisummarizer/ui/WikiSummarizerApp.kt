@@ -4,8 +4,10 @@ import android.net.Uri
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -37,6 +39,7 @@ import androidx.compose.ui.Alignment
 fun WikiSummarizerApp(incomingLink: String = "") {
     val context = LocalContext.current
     var wikiLink by remember { mutableStateOf("") }
+    var withStructure by remember { mutableStateOf(true) }
     val promptService = PromptService()
 
     // Read per-app language (set via system Settings → Apps → App → Language)
@@ -78,6 +81,21 @@ fun WikiSummarizerApp(incomingLink: String = "") {
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { withStructure = !withStructure }
+        ) {
+            Checkbox(
+                checked = withStructure,
+                onCheckedChange = { withStructure = it }
+            )
+            Text("Set answer structure")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         val clipboardManager = LocalClipboardManager.current
         Button(
             onClick = {
@@ -91,7 +109,7 @@ fun WikiSummarizerApp(incomingLink: String = "") {
                                 return
                             }
 
-                            val prompt = promptService.getPrompt(content, languageDisplayName)
+                            val prompt = promptService.getPrompt(content, languageDisplayName, withStructure)
                             clipboardManager.setText(AnnotatedString(prompt))
                             Toast.makeText(context, "Copied", Toast.LENGTH_SHORT).show()
                         } else {
@@ -115,7 +133,7 @@ fun WikiSummarizerApp(incomingLink: String = "") {
             onClick = {
                 val uri = Uri.parse(wikiLink)
                 val title = GetTitleFromUrl(uri)
-                val prompt = promptService.getPromptWithTopicName(title, languageDisplayName)
+                val prompt = promptService.getPromptWithTopicName(title, languageDisplayName, withStructure)
                 clipboardManager.setText(AnnotatedString(prompt))
                 Toast.makeText(context, "Copied (title prompt)", Toast.LENGTH_SHORT).show()
             },
@@ -130,7 +148,7 @@ fun WikiSummarizerApp(incomingLink: String = "") {
             onClick = {
                 val uri = Uri.parse(wikiLink)
                 val title = GetTitleFromUrl(uri)
-                val prompt = promptService.getPromptWithTopicName(title, languageDisplayName) + "\nSEARCH THE WEB"
+                val prompt = promptService.getPromptWithTopicName(title, languageDisplayName, withStructure) + "\nSEARCH THE WEB"
                 clipboardManager.setText(AnnotatedString(prompt))
                 Toast.makeText(context, "Prompt copied — paste it in Gemini", Toast.LENGTH_SHORT).show()
                 context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://gemini.google.com/app")))
@@ -141,14 +159,14 @@ fun WikiSummarizerApp(incomingLink: String = "") {
         }
 
         Button(
-            onClick = { openPromptInAI(context, "https://claude.ai/new?q=", wikiLink, promptService, languageDisplayName) },
+            onClick = { openPromptInAI(context, "https://claude.ai/new?q=", wikiLink, promptService, languageDisplayName, withStructure) },
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text("Open in Claude")
         }
 
         Button(
-            onClick = { openPromptInAI(context, "https://chatgpt.com/?q=", wikiLink, promptService, languageDisplayName) },
+            onClick = { openPromptInAI(context, "https://chatgpt.com/?q=", wikiLink, promptService, languageDisplayName, withStructure) },
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text("Open in ChatGPT")
@@ -161,11 +179,12 @@ private fun openPromptInAI(
     baseUrl: String,
     wikiLink: String,
     promptService: PromptService,
-    languageDisplayName: String
+    languageDisplayName: String,
+    withStructure: Boolean
 ) {
     val uri = Uri.parse(wikiLink)
     val title = GetTitleFromUrl(uri)
-    val prompt = promptService.getPromptWithTopicName(title, languageDisplayName)
+    val prompt = promptService.getPromptWithTopicName(title, languageDisplayName, withStructure)
     val encodedPrompt = URLEncoder.encode(prompt, StandardCharsets.UTF_8.name())
     val intent = Intent(Intent.ACTION_VIEW, Uri.parse("$baseUrl$encodedPrompt"))
     context.startActivity(intent)
