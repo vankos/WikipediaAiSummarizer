@@ -19,6 +19,7 @@ class PromptService {
             """
             Style:
             - Tell me about topic in lively, bold, concrete way, in simple words.
+            - Write every part as a connected narrative story, not as a bullet-point list of short, unrelated facts: each part should read like a good piece of storytelling on its own.
             - Be sceptical
             - Add an explanation of why something happened and how it worked
             Constraints:
